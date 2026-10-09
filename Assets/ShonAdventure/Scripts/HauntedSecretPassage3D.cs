@@ -45,7 +45,7 @@ namespace ShonAdventure
             }
             Cube("Red wall switch",new Vector3(-3.7f,1.7f,3.7f),new Vector3(.85f,1f,.35f),new Color(.85f,.17f,.16f),"red");
             Cube("Blue wall switch",new Vector3(3.7f,1.7f,3.7f),new Vector3(.85f,1f,.35f),new Color(.12f,.46f,.95f),"blue");
-            Cube("Cryptic plaque",new Vector3(0,3.1f,5.7f),new Vector3(2.7f,1f,.2f),new Color(.6f,.54f,.32f),"plaque");
+            Cube("Cryptic plaque",new Vector3(0,4.2f,5.08f),new Vector3(2.7f,.85f,.2f),new Color(.6f,.54f,.32f),"plaque");
             gate=Cube("Heavy gate",new Vector3(0,1.6f,5.4f),new Vector3(2.3f,3.2f,.4f),new Color(.29f,.33f,.39f),"gate").transform;
             var torch=new GameObject("Blue torch");var light=torch.AddComponent<Light>();
             light.type=LightType.Point;light.range=14;light.intensity=5;light.color=new Color(.4f,.65f,1f);
