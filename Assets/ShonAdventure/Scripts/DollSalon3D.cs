@@ -13,6 +13,8 @@ namespace ShonAdventure
         readonly Dictionary<string,string> names = new Dictionary<string,string> {
             {"photo","חצי תמונה"}, {"eye","עין זכוכית"}, {"tinykey","מפתח לתיבת נגינה"}, {"rustkey","מפתח חלוד"}
         };
+        Vector2 panelScroll;
+        float PanelHeight => Mathf.Min(260f, Screen.height * .45f);
         Camera cam;
         Transform dollHead;
         Light flicker;
@@ -165,7 +167,7 @@ namespace ShonAdventure
         }
         void Update()
         {
-            if (MouseClicked(out Vector2 mousePosition) && mousePosition.y > 190 && cam != null)
+            if (MouseClicked(out Vector2 mousePosition) && mousePosition.y > PanelHeight && mousePosition.y < Screen.height - 70f && cam != null)
             {
                 RaycastHit hit;
                 if(Physics.Raycast(cam.ScreenPointToRay(mousePosition),out hit,100f))
@@ -245,6 +247,7 @@ namespace ShonAdventure
             if (selected != "")
             {
                 string item=selected;selected="";
+                if (!inventory.Contains(item)) return;
                 if (item=="photo" && id=="painting")
                 {
                     inventory.Remove("photo");completed.Add("portrait");
@@ -271,20 +274,22 @@ namespace ShonAdventure
             }
             switch(id)
             {
-                case "photo":inventory.Add("photo");Say("ג'יימס","מצאתי חצי תמונה מתחת לשטיח.");break;
-                case "eye":inventory.Add("eye");Say("רומי","עין מזכוכית. ננסה להחזיר אותה לבובה.");break;
+                case "photo":if(completed.Contains("portrait")) break; inventory.Add("photo");Say("ג'יימס","מצאתי חצי תמונה מתחת לשטיח.");break;
+                case "eye":if(completed.Contains("eye")) break; inventory.Add("eye");Say("רומי","עין מזכוכית. ננסה להחזיר אותה לבובה.");break;
                 case "painting":Say("רומי","בתמונה חסר חלק. מה מסתתר בו?");break;
                 case "doll":
                     jumpScare=true;scareEnd=Time.time+2f;
                     Say("גרגורי","היא הזיזה את הראש! אני דורש לצאת!");
                     break;
                 case "floor":
-                    if(completed.Contains("eye")) {inventory.Add("tinykey");Say("שון","מצאנו מפתח קטן בין הקרשים!");}
+                    if(completed.Contains("music")) {Say("שון","כבר השתמשנו במפתח של תיבת הנגינה.");}
+                    else if(completed.Contains("eye")) {inventory.Add("tinykey");Say("שון","מצאנו מפתח קטן בין הקרשים!");}
                     else Say("רומי","משהו תקוע מתחת לקרש. אולי נבין מה אחרי שנתקן את הבובה.");
                     break;
                 case "box":Say("ג'יימס","תיבת נגינה נעולה. צריך מפתח קטן.");break;
                 case "curtain":
-                    if(completed.Contains("music")) {inventory.Add("rustkey");Say("רומי","מצאנו מפתח חלוד מאחורי הווילון!");}
+                    if(finished) {Say("רומי","כבר פתחנו את הספרייה.");}
+                    else if(completed.Contains("music")) {inventory.Add("rustkey");Say("רומי","מצאנו מפתח חלוד מאחורי הווילון!");}
                     else Say("איציק","הווילון לא זז. אולי תיבת הנגינה תשחרר את המנגנון.");
                     break;
                 case "door":Say("איציק","הדלת נעולה. חפשו מפתח.");break;
@@ -304,10 +309,11 @@ namespace ShonAdventure
             GUILayout.BeginArea(new Rect((Screen.width-w)/2,6,w,58));
             GUILayout.Label("SHON ADVENTURE • סלון הבובות בתלת־ממד",captionStyle);
             GUILayout.EndArea();
-            GUILayout.BeginArea(new Rect((Screen.width-w)/2,Screen.height-182,w,175),GUI.skin.box);
+            GUILayout.BeginArea(new Rect((Screen.width-w)/2,Screen.height-PanelHeight,w,PanelHeight-6f),GUI.skin.box);
+            panelScroll = GUILayout.BeginScrollView(panelScroll);
             GUILayout.Label(speaker+": "+dialogue,textStyle);
             GUILayout.BeginHorizontal();
-            GUILayout.Label("לחץ על הרצפה כדי ללכת | תיק:",textStyle,GUILayout.Width(45));
+            GUILayout.Label("לחץ על הרצפה כדי ללכת | תיק:",textStyle,GUILayout.Width(240));
             foreach(string item in new List<string>(inventory))
             {
                 GUI.backgroundColor=selected==item?Color.yellow:Color.white;
@@ -330,6 +336,7 @@ namespace ShonAdventure
                     else Say("רומי","צריך ליצור את סצנת הספרייה דרך ShonAdventure > Create 3D Library Scene.");
                 }
             }
+            GUILayout.EndScrollView();
             GUILayout.EndArea();
         }
     }

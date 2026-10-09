@@ -24,16 +24,8 @@ namespace ShonAdventure.Editor
             var scene=EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects,NewSceneMode.Single);
             new GameObject("Library Chapter Controller").AddComponent<HauntedLibrary3D>();
             EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene,path);
-            // Both scenes must be included in Build Settings for SceneManager.LoadScene to work.
-            var existing=new System.Collections.Generic.List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
-            foreach(string scenePath in new []{Folder+"/HauntedHouse_DollSalon3D.unity",path})
-            {
-                if(!File.Exists(scenePath))continue;
-                if(!existing.Exists(e=>e.path==scenePath))
-                    existing.Add(new EditorBuildSettingsScene(scenePath,true));
-            }
-            EditorBuildSettings.scenes=existing.ToArray();
+            if (!EditorSceneManager.SaveScene(scene,path)) return;
+            RoomBuildSettings.RegisterExistingRooms();
             AssetDatabase.Refresh();
             EditorUtility.DisplayDialog("ShonAdventure","3D Library scene created and added to Build Settings. Open the Doll Salon and complete its puzzle to enter the library.","OK");
         }

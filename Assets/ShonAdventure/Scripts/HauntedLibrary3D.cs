@@ -8,11 +8,12 @@ namespace ShonAdventure
     // Self-contained primitive environment; replaces no licensed Adventure Creator assets.
     public sealed class HauntedLibrary3D : MonoBehaviour
     {
+        Vector2 panelScroll;
+        float PanelHeight => Mathf.Min(260f, Screen.height * .45f);
         Camera cam;
         readonly Dictionary<GameObject,string> targets = new Dictionary<GameObject,string>();
         readonly HashSet<string> items = new HashSet<string>();
         readonly HashSet<string> flags = new HashSet<string>();
-        readonly List<Transform> books = new List<Transform>();
         Transform hero;
         Vector3 destination;
         string selected = "";
@@ -107,7 +108,7 @@ namespace ShonAdventure
                 gateLift=Mathf.MoveTowards(gateLift,3.5f,Time.deltaTime);
                 secretGate.position=new Vector3(5.4f,1.65f+gateLift,4.69f);
             }
-            if(Click(out Vector2 pos) && pos.y>185f && cam!=null)
+            if(Click(out Vector2 pos) && pos.y > PanelHeight && pos.y < Screen.height - 70f && cam!=null)
             {
                 RaycastHit hit;
                 if(Physics.Raycast(cam.ScreenPointToRay(pos),out hit,100))
@@ -147,6 +148,7 @@ namespace ShonAdventure
                 Say("איציק","שעון מקולקל. החוגים מצוירים בשלושה צבעים.");
             else if(id=="red"||id=="blue"||id=="green")
             {
+                if(solved) {Say("רומי","המעבר כבר פתוח.");return;}
                 if(!flags.Contains("clockRead"))
                 {
                     Say("גרגורי","אני חושב שצריך להבין קודם את השעון. רצוי לפני שנהפוך לספרים.");
@@ -186,7 +188,8 @@ namespace ShonAdventure
             GUILayout.BeginArea(new Rect((Screen.width-w)/2,8,w,50));
             GUILayout.Label("SHON ADVENTURE | הספרייה המקוללת",titleStyle);
             GUILayout.EndArea();
-            GUILayout.BeginArea(new Rect((Screen.width-w)/2,Screen.height-173,w,167),GUI.skin.box);
+            GUILayout.BeginArea(new Rect((Screen.width-w)/2,Screen.height-PanelHeight,w,PanelHeight-6f),GUI.skin.box);
+            panelScroll = GUILayout.BeginScrollView(panelScroll);
             GUILayout.Label(speaker+": "+text,dialogueStyle);
             GUILayout.BeginHorizontal();
             if(items.Contains("page") && GUILayout.Button(selected=="page"?"דף יומן (נבחר)":"דף יומן",buttonStyle))
@@ -194,7 +197,11 @@ namespace ShonAdventure
             if(GUILayout.Button("רמז",buttonStyle))
                 Say("רומי","קח את דף היומן, השתמש בו על השעון, ואז לחץ על הספרים בסדר הצבעים.");
             if(GUILayout.Button("חזור לסלון",buttonStyle))
-                SceneManager.LoadScene("HauntedHouse_DollSalon3D");
+            {
+                if(Application.CanStreamedLevelBeLoaded("HauntedHouse_DollSalon3D"))
+                    SceneManager.LoadScene("HauntedHouse_DollSalon3D");
+                else Say("רומי","סצנת הסלון חסרה או אינה פעילה בהגדרות הבנייה.");
+            }
             GUILayout.EndHorizontal();
             if(solved)
             {
@@ -206,6 +213,7 @@ namespace ShonAdventure
                     else Say("רומי","צור קודם את הסצנה דרך ShonAdventure > Create 3D Secret Passage Scene.");
                 }
             }
+            GUILayout.EndScrollView();
             GUILayout.EndArea();
         }
     }
