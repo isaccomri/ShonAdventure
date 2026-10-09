@@ -20,6 +20,8 @@ namespace ShonAdventure
         string text = "הספרייה נראית רגילה מדי. זה בדיוק מה שמדאיג אותי.";
         string sequence = "";
         bool solved;
+        Transform secretGate;
+        float gateLift;
         GUIStyle titleStyle, dialogueStyle, buttonStyle;
 
         Material Mat(Color c)
@@ -71,7 +73,7 @@ namespace ShonAdventure
             Block("Reading table",new Vector3(0,.9f,0),new Vector3(2.6f,1.3f,1.8f),new Color(.3f,.16f,.09f));
             Block("Torn diary page",new Vector3(-.5f,1.62f,-.1f),new Vector3(.7f,.035f,.7f),new Color(.93f,.85f,.61f),"page");
             Block("Brass clock",new Vector3(2.4f,1.3f,-.8f),new Vector3(.9f,1.4f,.5f),new Color(.78f,.57f,.21f),"clock");
-            Block("Secret passage",new Vector3(5.4f,1.65f,4.69f),new Vector3(1.65f,3.3f,.2f),new Color(.18f,.13f,.11f),"passage");
+            secretGate=Block("Secret passage",new Vector3(5.4f,1.65f,4.69f),new Vector3(1.65f,3.3f,.2f),new Color(.18f,.13f,.11f),"passage").transform;
             var lightObj=new GameObject("Reading lamp");
             var light=lightObj.AddComponent<Light>();light.type=LightType.Point;
             light.range=16;light.intensity=5;light.color=new Color(1f,.77f,.46f);
@@ -100,6 +102,11 @@ namespace ShonAdventure
         }
         void Update()
         {
+            if(solved && secretGate!=null)
+            {
+                gateLift=Mathf.MoveTowards(gateLift,3.5f,Time.deltaTime);
+                secretGate.position=new Vector3(5.4f,1.65f+gateLift,4.69f);
+            }
             if(Click(out Vector2 pos) && pos.y>185f && cam!=null)
             {
                 RaycastHit hit;
@@ -189,7 +196,16 @@ namespace ShonAdventure
             if(GUILayout.Button("חזור לסלון",buttonStyle))
                 SceneManager.LoadScene("HauntedHouse_DollSalon3D");
             GUILayout.EndHorizontal();
-            if(solved) GUILayout.Label("המעבר הסודי נפתח. הפרק הבא בפיתוח.",titleStyle);
+            if(solved)
+            {
+                GUILayout.Label("המעבר הסודי נפתח!",titleStyle);
+                if(GUILayout.Button("המשך למעבר הסודי",buttonStyle))
+                {
+                    if(Application.CanStreamedLevelBeLoaded("HauntedHouse_SecretPassage3D"))
+                        SceneManager.LoadScene("HauntedHouse_SecretPassage3D");
+                    else Say("רומי","צור קודם את הסצנה דרך ShonAdventure > Create 3D Secret Passage Scene.");
+                }
+            }
             GUILayout.EndArea();
         }
     }
