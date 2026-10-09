@@ -86,7 +86,7 @@ namespace ShonAdventure
             Cube("Shelf",new Vector3(4.8f,2.2f,4.1f),new Vector3(2,.18f,.8f),new Color(.4f,.21f,.09f));
             Sphere("Glass eye",new Vector3(4.8f,2.39f,3.95f),new Vector3(.28f,.28f,.28f),new Color(.56f,.89f,1f),"eye");
             // Music box near foreground.
-            Cube("Music box table",new Vector3(-2.5f,.8f,1f),new Vector3(1.7,1.6f,1.1f),new Color(.27f,.15f,.09f));
+            Cube("Music box table",new Vector3(-2.5f,.8f,1f),new Vector3(1.7f,1.6f,1.1f),new Color(.27f,.15f,.09f));
             Cube("Locked music box",new Vector3(-2.5f,1.78f,.95f),new Vector3(1.1f,.45f,.8f),new Color(.72f,.51f,.18f),"box");
             // Curtain, hidden key and locked door.
             Cube("Velvet curtain",new Vector3(1f,3.15f,4.68f),new Vector3(1.8f,4.8f,.16f),new Color(.35f,.035f,.085f),"curtain");
