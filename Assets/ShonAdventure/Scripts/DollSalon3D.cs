@@ -19,6 +19,10 @@ namespace ShonAdventure
         Transform[] friends;
         Vector3 walkTarget;
         bool walking;
+        readonly Dictionary<Transform,Transform[]> actorLegs = new Dictionary<Transform,Transform[]>();
+        readonly Dictionary<Transform,Vector3> previousPositions = new Dictionary<Transform,Vector3>();
+        AudioSource voicePlayer;
+        string currentVoiceId = "";
         string selected = "";
         string speaker = "שון";
         string dialogue = "זה הסלון? אפילו הבובות כאן צריכות טיפול.";
@@ -66,6 +70,9 @@ namespace ShonAdventure
             RenderSettings.ambientLight=new Color(.29f,.29f,.4f);
             BuildRoom();
             BuildCast();
+            voicePlayer=gameObject.AddComponent<AudioSource>();
+            voicePlayer.playOnAwake=false;
+            voicePlayer.spatialBlend=0f;
         }
         void BuildRoom()
         {
@@ -122,8 +129,10 @@ namespace ShonAdventure
             ActorPart("Body",PrimitiveType.Capsule,root,new Vector3(0,.93f,0),new Vector3(.48f,.65f,.4f),shirt);
             ActorPart("Head",PrimitiveType.Sphere,root,new Vector3(0,1.72f,0),new Vector3(.54f,.59f,.53f),new Color(.93f,.72f,.55f));
             ActorPart("Hair",PrimitiveType.Sphere,root,new Vector3(0,1.99f,.04f),new Vector3(.57f,.22f,.57f),new Color(.19f,.12f,.09f));
-            ActorPart("Left leg",PrimitiveType.Cube,root,new Vector3(-.15f,.37f,0),new Vector3(.16f,.7f,.25f),new Color(.13f,.15f,.22f));
-            ActorPart("Right leg",PrimitiveType.Cube,root,new Vector3(.15f,.37f,0),new Vector3(.16f,.7f,.25f),new Color(.13f,.15f,.22f));
+            var leftLeg=ActorPart("Left leg",PrimitiveType.Cube,root,new Vector3(-.15f,.37f,0),new Vector3(.16f,.7f,.25f),new Color(.13f,.15f,.22f));
+            var rightLeg=ActorPart("Right leg",PrimitiveType.Cube,root,new Vector3(.15f,.37f,0),new Vector3(.16f,.7f,.25f),new Color(.13f,.15f,.22f));
+            actorLegs[root]=new Transform[] {leftLeg.transform,rightLeg.transform};
+            previousPositions[root]=position;
             return root;
         }
         void BuildCast()
@@ -191,12 +200,45 @@ namespace ShonAdventure
                     friends[i].position=Vector3.MoveTowards(friends[i].position,follow,Time.deltaTime*2.2f);
                 }
             }
+            foreach(var entry in actorLegs)
+            {
+                var actor=entry.Key;
+                if(actor==null) continue;
+                Vector3 prior=previousPositions[actor];
+                float speed=(actor.position-prior).magnitude/Mathf.Max(Time.deltaTime,.0001f);
+                float swing=speed>.08f ? Mathf.Sin(Time.time*9f)*23f : 0f;
+                entry.Value[0].localRotation=Quaternion.Euler(swing,0,0);
+                entry.Value[1].localRotation=Quaternion.Euler(-swing,0,0);
+                previousPositions[actor]=actor.position;
+            }
             if (dollHead != null && jumpScare && Time.time < scareEnd)
                 dollHead.localRotation=Quaternion.Euler(0,Mathf.Sin(Time.time*9)*38f,0);
             else if (dollHead != null) dollHead.localRotation=Quaternion.identity;
             if (flicker != null) flicker.intensity=3.5f+Mathf.PerlinNoise(Time.time*9,.2f)*1.8f;
         }
-        void Say(string who,string text) {speaker=who; dialogue=text;}
+        void Say(string who,string text)
+        {
+            speaker=who; dialogue=text;
+            currentVoiceId=VoiceId(who,text);
+            if(voicePlayer!=null)
+            {
+                voicePlayer.Stop();
+                var clip=Resources.Load<AudioClip>("Voices/Hebrew/"+currentVoiceId);
+                if(clip!=null) {voicePlayer.clip=clip;voicePlayer.Play();}
+            }
+        }
+        // Stable filenames for optional local voice recordings. No voice clips are included.
+        string VoiceId(string who,string text)
+        {
+            string actor=who=="שון"?"shon":who=="רומי"?"romi":who=="ג'יימס"?"james":
+                who=="גרגורי"?"gregory":who=="איציק"?"itzik":who=="הבובה"?"doll":"narrator";
+            uint hash=2166136261;
+            unchecked
+            {
+                for(int i=0;i<text.Length;i++) hash=(hash ^ text[i])*16777619;
+            }
+            return actor+"_"+hash.ToString("x8");
+        }
         void Interact(string id)
         {
             if (selected != "")
