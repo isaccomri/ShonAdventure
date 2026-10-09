@@ -4,3 +4,30 @@
 [Bb]uild/
 [Ll]ogs/
 Assets/AdventureCreator/
+
+# Unity generated files
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Bb]uild/
+[Bb]uilds/
+.vs/
+.vscode/
+.idea/
+*.csproj
+*.sln
+*.slnx
+*.user
+*.tmp
+
+# Licensed Adventure Creator package
+Assets/AdventureCreator/
+
+# Private recordings and credentials
+.env
+*.pfx
+*.key
+
+Assets/AdventureCreator.meta
