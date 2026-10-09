@@ -15,6 +15,10 @@ namespace ShonAdventure
         Camera cam;
         Transform dollHead;
         Light flicker;
+        Transform hero;
+        Transform[] friends;
+        Vector3 walkTarget;
+        bool walking;
         string selected = "";
         string speaker = "שון";
         string dialogue = "זה הסלון? אפילו הבובות כאן צריכות טיפול.";
@@ -61,6 +65,7 @@ namespace ShonAdventure
             cam.backgroundColor=new Color(.035f,.04f,.075f);
             RenderSettings.ambientLight=new Color(.29f,.29f,.4f);
             BuildRoom();
+            BuildCast();
         }
         void BuildRoom()
         {
@@ -99,6 +104,38 @@ namespace ShonAdventure
             flicker.color=new Color(.55f,.68f,1f);
             lamp.transform.position=new Vector3(-1,4.2f,-1.5f);
         }
+        GameObject ActorPart(string name, PrimitiveType type, Transform parent, Vector3 localPosition, Vector3 scale, Color color)
+        {
+            var obj=GameObject.CreatePrimitive(type);
+            obj.name=name; obj.transform.SetParent(parent,false);
+            obj.transform.localPosition=localPosition;obj.transform.localScale=scale;
+            obj.GetComponent<Renderer>().material=MakeMaterial(color);
+            // Actors must not cover the interactive objects behind them.
+            var collider=obj.GetComponent<Collider>();
+            if(collider!=null) Destroy(collider);
+            return obj;
+        }
+        Transform CreateActor(string name, Vector3 position, Color shirt)
+        {
+            var root=new GameObject(name).transform;
+            root.position=position;
+            ActorPart("Body",PrimitiveType.Capsule,root,new Vector3(0,.93f,0),new Vector3(.48f,.65f,.4f),shirt);
+            ActorPart("Head",PrimitiveType.Sphere,root,new Vector3(0,1.72f,0),new Vector3(.54f,.59f,.53f),new Color(.93f,.72f,.55f));
+            ActorPart("Hair",PrimitiveType.Sphere,root,new Vector3(0,1.99f,.04f),new Vector3(.57f,.22f,.57f),new Color(.19f,.12f,.09f));
+            ActorPart("Left leg",PrimitiveType.Cube,root,new Vector3(-.15f,.37f,0),new Vector3(.16f,.7f,.25f),new Color(.13f,.15f,.22f));
+            ActorPart("Right leg",PrimitiveType.Cube,root,new Vector3(.15f,.37f,0),new Vector3(.16f,.7f,.25f),new Color(.13f,.15f,.22f));
+            return root;
+        }
+        void BuildCast()
+        {
+            hero=CreateActor("Shon - temporary 3D character",new Vector3(-1.4f,.05f,-2.9f),new Color(.12f,.47f,.88f));
+            walkTarget=hero.position;
+            friends=new Transform[] {
+                CreateActor("Romi - temporary 3D character",new Vector3(-2.6f,.05f,-3.1f),new Color(.82f,.22f,.62f)),
+                CreateActor("James - temporary 3D character",new Vector3(.8f,.05f,-3.3f),new Color(.19f,.72f,.44f)),
+                CreateActor("Gregory - temporary 3D character",new Vector3(2f,.05f,-3.0f),new Color(.94f,.57f,.19f))
+            };
+        }
         // Supports both Input System and legacy Input Manager project configurations.
         bool MouseClicked(out Vector2 position)
         {
@@ -124,7 +161,34 @@ namespace ShonAdventure
                 if(Physics.Raycast(cam.ScreenPointToRay(mousePosition),out hit,100f))
                 {
                     string id;
-                    if(hotspots.TryGetValue(hit.collider.gameObject,out id)) Interact(id);
+                    if(hotspots.TryGetValue(hit.collider.gameObject,out id))
+                    {
+                        Interact(id);
+                    }
+                    else if(hit.collider.gameObject.name == "Wooden floor" || hit.collider.gameObject.name == "Carpet")
+                    {
+                        walkTarget=new Vector3(Mathf.Clamp(hit.point.x,-5.7f,5.7f),.05f,Mathf.Clamp(hit.point.z,-4.2f,4.0f));
+                        walking=true;
+                    }
+                }
+            }
+            if(hero!=null && walking)
+            {
+                Vector3 previous=hero.position;
+                hero.position=Vector3.MoveTowards(previous,walkTarget,Time.deltaTime*2.7f);
+                Vector3 dir=walkTarget-previous;
+                if(dir.sqrMagnitude>.005f)
+                    hero.rotation=Quaternion.Slerp(hero.rotation,Quaternion.LookRotation(dir),Time.deltaTime*12f);
+                if((hero.position-walkTarget).sqrMagnitude<.003f) walking=false;
+            }
+            if(hero!=null && friends!=null)
+            {
+                for(int i=0;i<friends.Length;i++)
+                {
+                    Vector3 follow=hero.position+new Vector3(-1.2f+i*1.1f,0,-.6f-(i%2)*.5f);
+                    follow.x=Mathf.Clamp(follow.x,-5.7f,5.7f);
+                    follow.z=Mathf.Clamp(follow.z,-4.2f,4.0f);
+                    friends[i].position=Vector3.MoveTowards(friends[i].position,follow,Time.deltaTime*2.2f);
                 }
             }
             if (dollHead != null && jumpScare && Time.time < scareEnd)
@@ -200,7 +264,7 @@ namespace ShonAdventure
             GUILayout.BeginArea(new Rect((Screen.width-w)/2,Screen.height-182,w,175),GUI.skin.box);
             GUILayout.Label(speaker+": "+dialogue,textStyle);
             GUILayout.BeginHorizontal();
-            GUILayout.Label("תיק:",textStyle,GUILayout.Width(45));
+            GUILayout.Label("לחץ על הרצפה כדי ללכת | תיק:",textStyle,GUILayout.Width(45));
             foreach(string item in new List<string>(inventory))
             {
                 GUI.backgroundColor=selected==item?Color.yellow:Color.white;
