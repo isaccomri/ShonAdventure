@@ -99,12 +99,29 @@ namespace ShonAdventure
             flicker.color=new Color(.55f,.68f,1f);
             lamp.transform.position=new Vector3(-1,4.2f,-1.5f);
         }
+        // Supports both Input System and legacy Input Manager project configurations.
+        bool MouseClicked(out Vector2 position)
+        {
+            position = Vector2.zero;
+#if ENABLE_INPUT_SYSTEM
+            var mouse = UnityEngine.InputSystem.Mouse.current;
+            if (mouse == null || !mouse.leftButton.wasPressedThisFrame) return false;
+            position = mouse.position.ReadValue();
+            return true;
+#elif ENABLE_LEGACY_INPUT_MANAGER
+            if (!Input.GetMouseButtonDown(0)) return false;
+            position = Input.mousePosition;
+            return true;
+#else
+            return false;
+#endif
+        }
         void Update()
         {
-            if (Input.GetMouseButtonDown(0) && Input.mousePosition.y > 190 && cam != null)
+            if (MouseClicked(out Vector2 mousePosition) && mousePosition.y > 190 && cam != null)
             {
                 RaycastHit hit;
-                if(Physics.Raycast(cam.ScreenPointToRay(Input.mousePosition),out hit,100f))
+                if(Physics.Raycast(cam.ScreenPointToRay(mousePosition),out hit,100f))
                 {
                     string id;
                     if(hotspots.TryGetValue(hit.collider.gameObject,out id)) Interact(id);
