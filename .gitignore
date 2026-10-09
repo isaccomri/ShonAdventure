@@ -31,3 +31,6 @@ Assets/AdventureCreator/
 *.key
 
 Assets/AdventureCreator.meta
+
+# Generated synthetic dialogue audio
+LocalVoiceOutput/
