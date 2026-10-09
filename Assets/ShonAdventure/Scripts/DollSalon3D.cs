@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace ShonAdventure
 {
@@ -319,7 +320,16 @@ namespace ShonAdventure
             if(GUILayout.Button("רמז",buttonStyle)) Say("רומי","אספו חצי תמונה ועין. תקנו את הבובה, חפשו ברצפה, נגנו ופתחו את הווילון.");
             if(GUILayout.Button("אפס בחירת חפץ",buttonStyle)) selected="";
             GUILayout.EndHorizontal();
-            if(finished) GUILayout.Label("הפרק הושלם! השלב הבא: הספרייה.",captionStyle);
+            if(finished)
+            {
+                GUILayout.Label("הספרייה פתוחה!",captionStyle);
+                if(GUILayout.Button("המשך לספרייה המקוללת",buttonStyle))
+                {
+                    if(Application.CanStreamedLevelBeLoaded("HauntedHouse_Library3D"))
+                        SceneManager.LoadScene("HauntedHouse_Library3D");
+                    else Say("רומי","צריך ליצור את סצנת הספרייה דרך ShonAdventure > Create 3D Library Scene.");
+                }
+            }
             GUILayout.EndArea();
         }
     }
