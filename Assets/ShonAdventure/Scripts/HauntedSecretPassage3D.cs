@@ -7,6 +7,8 @@ namespace ShonAdventure
     // Chapter four: interactive underground corridor with a two-switch cooperative puzzle.
     public sealed class HauntedSecretPassage3D : MonoBehaviour
     {
+        Vector2 panelScroll;
+        float PanelHeight => Mathf.Min(260f, Screen.height * .45f);
         Camera cam;
         readonly Dictionary<GameObject,string> hot = new Dictionary<GameObject,string>();
         readonly HashSet<string> state = new HashSet<string>();
@@ -73,7 +75,7 @@ namespace ShonAdventure
 #endif
         }
         void Update() {
-            if(MousePress(out Vector2 p)&&p.y>180f) {
+            if(MousePress(out Vector2 p)&&p.y > PanelHeight && p.y < Screen.height - 70f && cam!=null) {
                 RaycastHit hit;
                 if(Physics.Raycast(cam.ScreenPointToRay(p),out hit,100f)) {
                     string id;
@@ -87,6 +89,7 @@ namespace ShonAdventure
         }
         void Say(string who,string msg) {speaker=who;line=msg;}
         void Interact(string id) {
+            if(doorOpen && (id=="red" || id=="blue")) {Say("רומי","השער כבר פתוח.");return;}
             if(id=="plaque") {state.Add("read");Say("רומי","כתוב: 'שתי ידיים, שתי הבטחות. האדום ראשון, הכחול אחריו.'");}
             else if(id=="red") {
                 state.Add("red");state.Remove("blue");
@@ -114,14 +117,20 @@ namespace ShonAdventure
             GUILayout.BeginArea(new Rect((Screen.width-w)/2,6,w,60));
             GUILayout.Label("SHON ADVENTURE | המעבר הסודי",title);
             GUILayout.EndArea();
-            GUILayout.BeginArea(new Rect((Screen.width-w)/2,Screen.height-169,w,163),GUI.skin.box);
+            GUILayout.BeginArea(new Rect((Screen.width-w)/2,Screen.height-PanelHeight,w,PanelHeight-6f),GUI.skin.box);
+            panelScroll = GUILayout.BeginScrollView(panelScroll);
             GUILayout.Label(speaker+": "+line,words);
             GUILayout.BeginHorizontal();
             if(GUILayout.Button("רמז",button))Say("רומי","קרא את לוח האבן. לחץ על המתג האדום ואחריו על המתג הכחול.");
             if(GUILayout.Button("חזרה לספרייה",button))
-                SceneManager.LoadScene("HauntedHouse_Library3D");
+            {
+                if(Application.CanStreamedLevelBeLoaded("HauntedHouse_Library3D"))
+                    SceneManager.LoadScene("HauntedHouse_Library3D");
+                else Say("רומי","סצנת הספרייה חסרה או אינה פעילה בהגדרות הבנייה.");
+            }
             GUILayout.EndHorizontal();
             if(doorOpen)GUILayout.Label("המעבר נפתח! המשך החדרים בפיתוח.",title);
+            GUILayout.EndScrollView();
             GUILayout.EndArea();
         }
     }

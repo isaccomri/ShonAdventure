@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -21,12 +20,8 @@ namespace ShonAdventure.Editor
             if(File.Exists(path)&&!EditorUtility.DisplayDialog("ShonAdventure","Replace existing Secret Passage scene?","Replace","Cancel"))return;
             var scene=EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects,NewSceneMode.Single);
             new GameObject("Secret Passage Chapter Controller").AddComponent<HauntedSecretPassage3D>();
-            EditorSceneManager.SaveScene(scene,path);
-            var settings=new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
-            foreach(var p in new[]{Folder+"/HauntedHouse_DollSalon3D.unity",Folder+"/HauntedHouse_Library3D.unity",path}) {
-                if(File.Exists(p)&&!settings.Exists(e=>e.path==p))settings.Add(new EditorBuildSettingsScene(p,true));
-            }
-            EditorBuildSettings.scenes=settings.ToArray();
+            if (!EditorSceneManager.SaveScene(scene,path)) return;
+            RoomBuildSettings.RegisterExistingRooms();
             AssetDatabase.Refresh();
             EditorUtility.DisplayDialog("ShonAdventure","Secret Passage created. Complete the Library books puzzle to enter it.","OK");
         }
